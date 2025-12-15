@@ -1,0 +1,168 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  default: none
+  enable:
+    # Default linters
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+
+    # Additional linters
+    - bodyclose
+    - copyloopvar
+    - dupl
+    - durationcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - gosec
+    - misspell
+    - nakedret
+    - nilerr
+    - revive
+    - unconvert
+    - whitespace
+
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: false
+      exclude-functions:
+        - (io.Closer).Close
+        - (net/http.ResponseWriter).Write
+
+    gocyclo:
+      min-complexity: 10
+
+    gocognit:
+      min-complexity: 20
+
+    goconst:
+      min-len: 5
+      min-occurrences: 5
+
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+      disabled-checks:
+        - hugeParam
+        - rangeValCopy
+
+    gosec:
+      excludes:
+        - G104  # Audit errors not checked
+        - G107  # Potential HTTP request made with variable url
+        - G114  # Use of net/http serve function without timeout
+        - G304  # File path provided as taint input
+        - G306  # Expect WriteFile permissions to be 0600 or less
+
+    misspell:
+      locale: US
+
+    nakedret:
+      max-func-lines: 30
+
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: exported
+        - name: if-return
+        - name: increment-decrement
+        - name: var-declaration
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unexported-return
+        - name: indent-error-flow
+        - name: errorf
+        - name: empty-block
+        - name: superfluous-else
+        - name: unreachable-code
+
+    staticcheck:
+      checks:
+        - all
+
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - std-error-handling
+    rules:
+      # Exclude linters from running on test files
+      - path: _test\.go
+        linters:
+          - dupl
+          - gosec
+          - gocognit
+          - errcheck
+          - goconst
+          - bodyclose
+          - gocritic
+      - path: _test\.go
+        text: "ST1003"
+
+      # Exclude linters from examples
+      - path: examples/
+        linters:
+          - gosec
+          - revive
+          - gocritic
+          - staticcheck
+
+      # Allow longer functions in CLI code
+      - path: internal/cli/
+        linters:
+          - gocognit
+          - gocyclo
+          - gosec
+
+      # Allow exhaustive switch in parser (many annotation types)
+      - path: internal/parser/
+        linters:
+          - exhaustive
+
+    paths:
+      - legacy
+      - vendor
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    gofmt:
+      simplify: true
+    goimports:
+      local-prefixes:
+        - github.com/fathurrohman26/yaswag
+
+output:
+  formats:
+    text:
+      path: stdout
+      print-linter-name: true
+      print-issued-lines: true
+  sort-order:
+    - linter
+    - file

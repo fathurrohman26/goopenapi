@@ -1,0 +1,2235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YaSwag</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --primary-light: #818cf8;
+
+        /* Light mode colors */
+        --bg-body: #f1f5f9;
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8fafc;
+        --bg-tertiary: #e2e8f0;
+        --text-primary: #1e293b;
+        --text-secondary: #475569;
+        --text-muted: #64748b;
+        --border: #e2e8f0;
+
+        /* HTTP Method colors - Light */
+        --get-bg: #dbeafe;
+        --get-border: #93c5fd;
+        --get-badge: #2563eb;
+        --post-bg: #dcfce7;
+        --post-border: #86efac;
+        --post-badge: #16a34a;
+        --put-bg: #fef3c7;
+        --put-border: #fcd34d;
+        --put-badge: #d97706;
+        --delete-bg: #fee2e2;
+        --delete-border: #fca5a5;
+        --delete-badge: #dc2626;
+        --patch-bg: #f3e8ff;
+        --patch-border: #d8b4fe;
+        --patch-badge: #9333ea;
+
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1),
+          0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --radius: 8px;
+      }
+
+      [data-theme="dark"] {
+        --bg-body: #0f172a;
+        --bg-primary: #1e293b;
+        --bg-secondary: #334155;
+        --bg-tertiary: #475569;
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
+        --border: #334155;
+
+        /* HTTP Method colors - Dark */
+        --get-bg: #1e3a5f;
+        --get-border: #2563eb;
+        --get-badge: #3b82f6;
+        --post-bg: #14532d;
+        --post-border: #16a34a;
+        --post-badge: #22c55e;
+        --put-bg: #451a03;
+        --put-border: #d97706;
+        --put-badge: #f59e0b;
+        --delete-bg: #450a0a;
+        --delete-border: #dc2626;
+        --delete-badge: #ef4444;
+        --patch-bg: #3b0764;
+        --patch-border: #9333ea;
+        --patch-badge: #a855f7;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        overflow-y: scroll;
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        background: var(--bg-body);
+        color: var(--text-primary);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        transition: background-color 0.2s ease, color 0.2s ease;
+      }
+
+      /* Header */
+      .header {
+        background: var(--bg-primary);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: var(--shadow-sm);
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+      }
+
+      .header-inner {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: var(--text-primary);
+      }
+
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          var(--primary-dark) 100%
+        );
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .logo-text {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .logo-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.2;
+      }
+
+      .logo-subtitle {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 400;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: var(--radius);
+        transition: all 0.15s ease;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .nav-link:hover {
+        color: var(--text-primary);
+        background: var(--bg-secondary);
+      }
+
+      .nav-link svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+
+      .nav-link.primary {
+        background: var(--primary);
+        color: white;
+      }
+
+      .nav-link.primary:hover {
+        background: var(--primary-dark);
+        color: white;
+      }
+
+      /* Theme Toggle */
+      .theme-toggle {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        color: var(--text-secondary);
+      }
+
+      .theme-toggle:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+      }
+
+      .theme-toggle svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .theme-toggle .sun-icon {
+        display: none;
+      }
+
+      .theme-toggle .moon-icon {
+        display: block;
+      }
+
+      [data-theme="dark"] .theme-toggle .sun-icon {
+        display: block;
+      }
+
+      [data-theme="dark"] .theme-toggle .moon-icon {
+        display: none;
+      }
+
+      /* Main Content */
+      .main {
+        flex: 1;
+        max-width: 1400px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .swagger-container {
+        background: var(--bg-primary);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+      }
+
+      /* Swagger UI Overrides */
+      .swagger-ui {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      .swagger-ui .topbar {
+        display: none;
+      }
+
+      .swagger-ui .wrapper {
+        padding: 0;
+      }
+
+      .swagger-ui .information-container {
+        padding: 40px 48px;
+        background: var(--bg-primary);
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .swagger-ui .info {
+        margin: 0;
+      }
+
+      .swagger-ui .info hgroup.main {
+        margin-bottom: 24px;
+      }
+
+      .swagger-ui .info .title {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        font-weight: 700;
+        font-size: 36px;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+
+      .swagger-ui .info .title small {
+        background: var(--primary);
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 14px;
+        font-weight: 600;
+        vertical-align: middle;
+        position: relative;
+        top: 0;
+      }
+
+      .swagger-ui .info .title small.version-stamp {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+      }
+
+      .swagger-ui .info .title small pre {
+        margin: 0;
+        padding: 0;
+        font-family: inherit;
+        background: none;
+      }
+
+      .swagger-ui .info .base-url {
+        color: var(--text-muted);
+        font-family: "JetBrains Mono", "Fira Code", monospace;
+        font-size: 14px;
+        margin-top: 4px;
+        display: block;
+      }
+
+      .swagger-ui .info .description {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+      }
+
+      .swagger-ui .info .description,
+      .swagger-ui .info .description p {
+        color: var(--text-secondary);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        font-size: 15px;
+        line-height: 1.7;
+        max-width: 900px;
+      }
+
+      .swagger-ui .info .description h4,
+      .swagger-ui .info .description h5 {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-top: 24px;
+        margin-bottom: 12px;
+      }
+
+      .swagger-ui .info .description ul {
+        list-style: none;
+        padding-left: 0;
+        margin: 12px 0;
+      }
+
+      .swagger-ui .info .description ul li {
+        position: relative;
+        padding-left: 20px;
+        margin-bottom: 8px;
+      }
+
+      .swagger-ui .info .description ul li::before {
+        content: "•";
+        color: var(--primary);
+        font-weight: bold;
+        position: absolute;
+        left: 0;
+      }
+
+      .swagger-ui .info a {
+        color: var(--primary);
+        text-decoration: none;
+        transition: opacity 0.2s;
+      }
+
+      .swagger-ui .info a:hover {
+        opacity: 0.8;
+        text-decoration: underline;
+      }
+
+      /* Info links section (Terms, Contact, License, External Docs) */
+      .swagger-ui .info > div:last-child {
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        align-items: center;
+      }
+
+      .swagger-ui .info > div:last-child > a,
+      .swagger-ui .info > div:last-child > div {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--primary);
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .swagger-ui .info > div:last-child > div a {
+        color: var(--primary);
+      }
+
+      .swagger-ui .scheme-container {
+        background: var(--bg-secondary);
+        box-shadow: none;
+        padding: 16px 48px;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .swagger-ui .scheme-container .schemes {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .swagger-ui .scheme-container .schemes > label {
+        color: var(--text-primary);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .swagger-ui select {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        border-radius: 6px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+        padding: 8px 12px;
+        font-size: 14px;
+        min-width: 200px;
+        cursor: pointer;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .swagger-ui select:hover {
+        border-color: var(--primary);
+      }
+
+      .swagger-ui select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+      }
+
+      /* Buttons */
+      .swagger-ui .btn {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        font-weight: 500;
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .swagger-ui .btn.authorize {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+        padding: 8px 16px;
+      }
+
+      .swagger-ui .btn.authorize:hover {
+        background: var(--bg-secondary);
+        border-color: var(--primary);
+      }
+
+      .swagger-ui .btn.authorize svg {
+        fill: var(--text-primary);
+      }
+
+      .swagger-ui .btn.execute {
+        background: var(--primary);
+        color: white;
+        border: none;
+      }
+
+      .swagger-ui .btn.execute:hover {
+        background: var(--primary-dark);
+      }
+
+      .swagger-ui .btn.cancel {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+      }
+
+      .swagger-ui .btn.cancel:hover {
+        background: var(--bg-tertiary);
+      }
+
+      .swagger-ui .try-out__btn {
+        background: var(--bg-primary);
+        color: var(--primary);
+        border: 1px solid var(--primary);
+        padding: 6px 14px;
+        font-size: 13px;
+      }
+
+      .swagger-ui .try-out__btn:hover {
+        background: var(--primary);
+        color: white;
+      }
+
+      .swagger-ui .try-out__btn.cancel {
+        background: transparent;
+        color: var(--text-secondary);
+        border-color: var(--border);
+      }
+
+      .swagger-ui .try-out__btn.cancel:hover {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+      }
+
+      .swagger-ui .opblock-tag-section {
+        margin: 0 20px;
+      }
+
+      .swagger-ui .opblock-tag {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-primary);
+        padding: 16px 0;
+        margin: 0;
+      }
+
+      .swagger-ui .opblock-tag:hover {
+        background: transparent;
+      }
+
+      .swagger-ui .opblock-tag small {
+        color: var(--text-muted);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      .swagger-ui .opblock {
+        margin: 0 0 12px;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        border-width: 1px;
+        border-style: solid;
+        overflow: hidden;
+      }
+
+      .swagger-ui .opblock .opblock-summary {
+        border: none;
+        padding: 12px 16px;
+      }
+
+      .swagger-ui .opblock .opblock-summary-method {
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        min-width: 70px;
+        padding: 6px 12px;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      .swagger-ui .opblock .opblock-summary-path,
+      .swagger-ui .opblock .opblock-summary-path__deprecated {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        color: var(--text-primary);
+      }
+
+      .swagger-ui .opblock .opblock-summary-description {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        color: var(--text-secondary);
+      }
+
+      .swagger-ui .opblock.opblock-get {
+        background: var(--get-bg);
+        border-color: var(--get-border);
+      }
+
+      .swagger-ui .opblock.opblock-get .opblock-summary-method {
+        background: var(--get-badge);
+      }
+
+      .swagger-ui .opblock.opblock-get .opblock-summary {
+        border-color: var(--get-border);
+      }
+
+      .swagger-ui .opblock.opblock-post {
+        background: var(--post-bg);
+        border-color: var(--post-border);
+      }
+
+      .swagger-ui .opblock.opblock-post .opblock-summary-method {
+        background: var(--post-badge);
+      }
+
+      .swagger-ui .opblock.opblock-put {
+        background: var(--put-bg);
+        border-color: var(--put-border);
+      }
+
+      .swagger-ui .opblock.opblock-put .opblock-summary-method {
+        background: var(--put-badge);
+      }
+
+      .swagger-ui .opblock.opblock-delete {
+        background: var(--delete-bg);
+        border-color: var(--delete-border);
+      }
+
+      .swagger-ui .opblock.opblock-delete .opblock-summary-method {
+        background: var(--delete-badge);
+      }
+
+      .swagger-ui .opblock.opblock-patch {
+        background: var(--patch-bg);
+        border-color: var(--patch-border);
+      }
+
+      .swagger-ui .opblock.opblock-patch .opblock-summary-method {
+        background: var(--patch-badge);
+      }
+
+      .swagger-ui .opblock .opblock-section-header {
+        background: var(--bg-secondary);
+        box-shadow: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .swagger-ui .opblock .opblock-section-header h4 {
+        color: var(--text-primary);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      .swagger-ui .opblock-body {
+        background: var(--bg-primary);
+      }
+
+      .swagger-ui .opblock-body pre {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border-radius: 6px;
+      }
+
+      .swagger-ui .opblock-description-wrapper,
+      .swagger-ui .opblock-external-docs-wrapper {
+        padding: 16px;
+      }
+
+      .swagger-ui .opblock-description-wrapper p,
+      .swagger-ui .opblock-external-docs-wrapper p {
+        color: var(--text-secondary);
+      }
+
+      .swagger-ui .btn {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        border-radius: 6px;
+        color: var(--text-primary);
+        border-color: var(--border);
+      }
+
+      .swagger-ui .btn.execute {
+        background: var(--primary);
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        transition: background 0.15s ease;
+        color: white;
+      }
+
+      .swagger-ui .btn.execute:hover {
+        background: var(--primary-dark);
+      }
+
+      .swagger-ui .btn.cancel {
+        border-radius: 6px;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      .swagger-ui .try-out__btn {
+        color: var(--text-primary);
+        border-color: var(--text-muted);
+        background: transparent;
+      }
+
+      .swagger-ui .try-out__btn:hover {
+        color: var(--text-primary);
+        border-color: var(--text-primary);
+        background: var(--bg-secondary);
+      }
+
+      .swagger-ui .try-out__btn.cancel {
+        color: var(--delete-badge);
+        border-color: var(--delete-badge);
+        background: transparent;
+      }
+
+      .swagger-ui .try-out__btn.cancel:hover {
+        color: white;
+        background: var(--delete-badge);
+      }
+
+      .swagger-ui input[type="text"],
+      .swagger-ui input[type="password"],
+      .swagger-ui input[type="search"],
+      .swagger-ui input[type="email"],
+      .swagger-ui input[type="file"],
+      .swagger-ui textarea {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        border-radius: 6px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+      }
+
+      .swagger-ui textarea {
+        background: var(--bg-secondary);
+      }
+
+      .swagger-ui .model-box {
+        border-radius: var(--radius);
+        background: var(--bg-secondary);
+      }
+
+      .swagger-ui section.models {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin: 20px;
+        background: var(--bg-primary);
+      }
+
+      .swagger-ui section.models h4 {
+        color: var(--text-primary);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      .swagger-ui section.models.is-open h4 {
+        border-bottom: 1px solid var(--border);
+      }
+
+      .swagger-ui .model-container {
+        background: var(--bg-secondary);
+        border-radius: 6px;
+        margin: 8px 0;
+      }
+
+      .swagger-ui .model {
+        color: var(--text-primary);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      .swagger-ui .model-title {
+        color: var(--text-primary);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      .swagger-ui .model .property.primitive {
+        color: var(--text-secondary);
+      }
+
+      .swagger-ui table {
+        color: var(--text-primary);
+      }
+
+      .swagger-ui table thead tr th,
+      .swagger-ui table thead tr td {
+        color: var(--text-primary);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .swagger-ui table tbody tr td {
+        padding: 12px 0;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .swagger-ui .parameter__name {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .swagger-ui .parameter__type {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        color: var(--text-muted);
+      }
+
+      .swagger-ui .parameter__in {
+        color: var(--text-muted);
+      }
+
+      .swagger-ui .response-col_status {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .swagger-ui .response-col_description {
+        color: var(--text-secondary);
+      }
+
+      .swagger-ui .responses-inner {
+        padding: 16px;
+      }
+
+      .swagger-ui .responses-inner h4,
+      .swagger-ui .responses-inner h5 {
+        color: var(--text-primary);
+      }
+
+      .swagger-ui .response-control-media-type__title {
+        color: var(--text-secondary);
+      }
+
+      .swagger-ui .tab li {
+        color: var(--text-secondary);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      .swagger-ui .tab li.active {
+        color: var(--text-primary);
+      }
+
+      .swagger-ui label {
+        color: var(--text-primary);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      /* Authorization Modal */
+      .swagger-ui .dialog-ux .modal-ux {
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-md);
+      }
+
+      .swagger-ui .dialog-ux .modal-ux-header {
+        border-bottom: 1px solid var(--border);
+      }
+
+      .swagger-ui .dialog-ux .modal-ux-header h3 {
+        color: var(--text-primary);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      .swagger-ui .dialog-ux .modal-ux-content {
+        background: var(--bg-primary);
+      }
+
+      .swagger-ui .dialog-ux .modal-ux-content p {
+        color: var(--text-secondary);
+      }
+
+      .swagger-ui .dialog-ux .modal-ux-content h4 {
+        color: var(--text-primary);
+      }
+
+      .swagger-ui .dialog-ux .modal-ux-content label {
+        color: var(--text-muted);
+      }
+
+      .swagger-ui .dialog-ux .modal-ux-content code {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+      }
+
+      .swagger-ui .auth-container input[type="text"],
+      .swagger-ui .auth-container input[type="password"] {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+      }
+
+      .swagger-ui .auth-container input[type="text"]:focus,
+      .swagger-ui .auth-container input[type="password"]:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+      }
+
+      .swagger-ui .auth-container .wrapper {
+        border-bottom: 1px solid var(--border);
+      }
+
+      .swagger-ui .auth-btn-wrapper {
+        padding: 16px 0;
+      }
+
+      .swagger-ui .btn-done {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      .swagger-ui .btn-done:hover {
+        background: var(--bg-tertiary);
+      }
+
+      .swagger-ui .btn.modal-btn-auth {
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 6px;
+      }
+
+      .swagger-ui .btn.modal-btn-auth:hover {
+        background: var(--primary-dark);
+      }
+
+      .swagger-ui .close-modal svg {
+        fill: var(--text-secondary);
+      }
+
+      .swagger-ui .close-modal:hover svg {
+        fill: var(--text-primary);
+      }
+
+      /* Scope checkboxes in auth modal */
+      .swagger-ui .scopes h2 {
+        color: var(--text-primary);
+      }
+
+      .swagger-ui .scope-def {
+        border-bottom: 1px solid var(--border);
+      }
+
+      .swagger-ui .scope-def p {
+        color: var(--text-secondary);
+      }
+
+      .swagger-ui .loading-container .loading::after {
+        color: var(--text-muted);
+      }
+
+      .swagger-ui .filter-container .filter input[type="text"] {
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+      }
+
+      .swagger-ui .download-contents {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+      }
+
+      .swagger-ui .copy-to-clipboard {
+        background: var(--bg-tertiary);
+        border-radius: 4px;
+        right: 10px;
+        top: 10px;
+      }
+
+      .swagger-ui .copy-to-clipboard button {
+        background: transparent;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 16px;
+        transition: all 0.15s ease;
+      }
+
+      .swagger-ui .copy-to-clipboard button:hover {
+        background-color: var(--bg-secondary);
+        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>');
+      }
+
+      [data-theme="dark"] .swagger-ui .copy-to-clipboard button {
+        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>');
+      }
+
+      [data-theme="dark"] .swagger-ui .copy-to-clipboard button:hover {
+        background-color: var(--bg-tertiary);
+        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>');
+      }
+
+      .swagger-ui .copy-to-clipboard svg {
+        fill: var(--text-secondary);
+      }
+
+      .swagger-ui .copy-to-clipboard:hover svg {
+        fill: var(--text-primary);
+      }
+
+      .swagger-ui .arrow {
+        fill: var(--text-secondary);
+      }
+
+      /* Curl command and code blocks */
+      .swagger-ui .curl-command .copy-to-clipboard,
+      .swagger-ui .highlight-code > .copy-to-clipboard {
+        background: var(--bg-tertiary);
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        z-index: 1;
+      }
+
+      .swagger-ui .highlight-code {
+        position: relative;
+      }
+
+      .swagger-ui .download-contents {
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        border: none;
+        border-radius: 4px;
+        padding: 6px 12px;
+        font-size: 12px;
+        cursor: pointer;
+        position: absolute;
+        right: 50px;
+        top: 10px;
+        z-index: 1;
+      }
+
+      .swagger-ui .download-contents:hover {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+      }
+
+      /* Validation Modal */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+      }
+
+      .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .modal {
+        background: var(--bg-primary);
+        border-radius: 12px;
+        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+          0 8px 10px -6px rgb(0 0 0 / 0.1);
+        max-width: 560px;
+        width: 90%;
+        max-height: 80vh;
+        overflow: hidden;
+        transform: scale(0.95);
+        transition: transform 0.2s ease;
+      }
+
+      .modal-overlay.active .modal {
+        transform: scale(1);
+      }
+
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .modal-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .modal-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: none;
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+      }
+
+      .modal-close:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+      }
+
+      .modal-close svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .modal-body {
+        padding: 24px;
+        overflow-y: auto;
+        max-height: calc(80vh - 140px);
+      }
+
+      .validation-status {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        border-radius: var(--radius);
+        margin-bottom: 20px;
+      }
+
+      .validation-status.valid {
+        background: var(--post-bg);
+        border: 1px solid var(--post-border);
+      }
+
+      .validation-status.invalid {
+        background: var(--delete-bg);
+        border: 1px solid var(--delete-border);
+      }
+
+      .validation-status-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .validation-status.valid .validation-status-icon {
+        background: var(--post-badge);
+        color: white;
+      }
+
+      .validation-status.invalid .validation-status-icon {
+        background: var(--delete-badge);
+        color: white;
+      }
+
+      .validation-status-icon svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .validation-status-text {
+        flex: 1;
+      }
+
+      .validation-status-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 14px;
+      }
+
+      .validation-status-version {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+      }
+
+      .validation-section {
+        margin-bottom: 16px;
+      }
+
+      .validation-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .validation-section-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .validation-section-title .count {
+        background: var(--bg-tertiary);
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+
+      .validation-item {
+        background: var(--bg-secondary);
+        border-radius: 6px;
+        padding: 12px 14px;
+        margin-bottom: 8px;
+        font-size: 13px;
+        color: var(--text-primary);
+        line-height: 1.5;
+        border-left: 3px solid transparent;
+      }
+
+      .validation-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .validation-item.error {
+        border-left-color: var(--delete-badge);
+      }
+
+      .validation-item.warning {
+        border-left-color: var(--put-badge);
+      }
+
+      .validation-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        color: var(--text-muted);
+      }
+
+      .validation-loading-spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid var(--border);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 12px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Validation Badge */
+      .validation-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: none;
+        margin-left: 4px;
+      }
+
+      .validation-badge.loading {
+        background: var(--bg-tertiary);
+        color: var(--text-muted);
+      }
+
+      .validation-badge.valid {
+        background: var(--post-bg);
+        color: var(--post-badge);
+        border: 1px solid var(--post-border);
+      }
+
+      .validation-badge.valid:hover {
+        background: var(--post-border);
+      }
+
+      .validation-badge.invalid {
+        background: var(--delete-bg);
+        color: var(--delete-badge);
+        border: 1px solid var(--delete-border);
+      }
+
+      .validation-badge.invalid:hover {
+        background: var(--delete-border);
+      }
+
+      .validation-badge svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .validation-badge .badge-spinner {
+        width: 12px;
+        height: 12px;
+        border: 2px solid var(--border);
+        border-top-color: var(--text-muted);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      /* Footer */
+      .footer {
+        background: var(--bg-primary);
+        border-top: 1px solid var(--border);
+        margin-top: auto;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+      }
+
+      .footer-inner {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .footer-text {
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+
+      .footer-text a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .footer-text a:hover {
+        text-decoration: underline;
+      }
+
+      .footer-links {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .footer-link {
+        font-size: 13px;
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: color 0.15s ease;
+      }
+
+      .footer-link:hover {
+        color: var(--text-secondary);
+      }
+
+      /* Responsive - Large Tablet / Small Desktop */
+      @media (max-width: 1024px) {
+        .header-inner {
+          padding: 0 20px;
+        }
+
+        .main {
+          padding: 20px;
+        }
+
+        .swagger-ui .information-container {
+          padding: 32px 32px;
+        }
+
+        .swagger-ui .scheme-container {
+          padding: 14px 32px;
+        }
+
+        .swagger-ui .opblock-tag-section {
+          margin: 0 16px;
+        }
+      }
+
+      /* Responsive - Tablet */
+      @media (max-width: 768px) {
+        .header-inner {
+          padding: 0 16px;
+          height: 56px;
+        }
+
+        .logo-icon {
+          width: 36px;
+          height: 36px;
+          font-size: 16px;
+          border-radius: 8px;
+        }
+
+        .logo-text {
+          display: none;
+        }
+
+        .nav {
+          gap: 4px;
+        }
+
+        .nav-link {
+          padding: 10px;
+          border-radius: 8px;
+        }
+
+        .nav-link span {
+          display: none;
+        }
+
+        .nav-link svg {
+          width: 20px;
+          height: 20px;
+        }
+
+        .theme-toggle {
+          width: 44px;
+          height: 44px;
+        }
+
+        .main {
+          padding: 12px;
+        }
+
+        .swagger-container {
+          border-radius: 8px;
+        }
+
+        .swagger-ui .information-container {
+          padding: 24px 20px;
+        }
+
+        .swagger-ui .info .title {
+          font-size: 22px;
+          gap: 8px;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .swagger-ui .info .title small {
+          font-size: 11px;
+          padding: 4px 8px;
+        }
+
+        .swagger-ui .info .title small:first-of-type {
+          margin-top: 8px;
+        }
+
+        .swagger-ui .info .base-url {
+          font-size: 12px;
+          word-break: break-all;
+        }
+
+        .swagger-ui .info .description {
+          margin-top: 16px;
+          padding-top: 16px;
+        }
+
+        .swagger-ui .info .description,
+        .swagger-ui .info .description p {
+          font-size: 14px;
+          line-height: 1.6;
+        }
+
+        .swagger-ui .info > div:last-child {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+          margin-top: 16px;
+          padding-top: 16px;
+        }
+
+        .swagger-ui .scheme-container {
+          padding: 12px 16px;
+          flex-direction: column;
+          align-items: stretch !important;
+        }
+
+        .swagger-ui .scheme-container .schemes {
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .swagger-ui .scheme-container .schemes > label {
+          font-size: 13px;
+        }
+
+        .swagger-ui .scheme-container select {
+          width: 100%;
+          padding: 10px 12px;
+          font-size: 14px;
+        }
+
+        .swagger-ui .opblock-tag-section {
+          margin: 0 8px;
+        }
+
+        .swagger-ui .opblock-tag {
+          padding: 14px 8px;
+          font-size: 16px;
+        }
+
+        .swagger-ui .opblock {
+          margin: 0 0 8px;
+        }
+
+        .swagger-ui .opblock .opblock-summary {
+          padding: 10px 12px;
+          flex-wrap: wrap;
+        }
+
+        .swagger-ui .opblock .opblock-summary-method {
+          font-size: 11px;
+          min-width: 60px;
+          padding: 5px 10px;
+        }
+
+        .swagger-ui .opblock .opblock-summary-path {
+          font-size: 13px;
+          flex: 1;
+          min-width: 0;
+          word-break: break-all;
+        }
+
+        .swagger-ui .opblock .opblock-summary-description {
+          display: none;
+        }
+
+        .swagger-ui .opblock-body {
+          padding: 12px;
+        }
+
+        .swagger-ui section.models {
+          margin: 8px;
+        }
+
+        .swagger-ui section.models h4 {
+          padding: 12px 16px;
+          font-size: 14px;
+        }
+
+        .swagger-ui .model-container {
+          padding: 12px;
+        }
+
+        .footer-inner {
+          flex-direction: column;
+          text-align: center;
+          gap: 12px;
+          padding: 16px;
+        }
+
+        /* Buttons - larger touch targets */
+        .swagger-ui .btn {
+          min-height: 44px;
+          padding: 10px 16px;
+          font-size: 14px;
+        }
+
+        .swagger-ui .btn.execute {
+          width: 100%;
+          justify-content: center;
+        }
+
+        .swagger-ui .btn.cancel {
+          width: 100%;
+        }
+
+        /* Authorize button */
+        .swagger-ui .btn.authorize {
+          padding: 10px 16px;
+        }
+
+        /* Try it out button */
+        .swagger-ui .try-out__btn {
+          padding: 8px 16px;
+        }
+
+        /* Parameters table */
+        .swagger-ui table.parameters {
+          font-size: 13px;
+        }
+
+        .swagger-ui .parameters-col_name {
+          width: 100px;
+        }
+
+        /* Response section */
+        .swagger-ui .responses-inner {
+          padding: 12px;
+        }
+
+        /* Validation badge */
+        .validation-badge {
+          padding: 6px 10px !important;
+          font-size: 11px !important;
+        }
+      }
+
+      /* Responsive - Small Mobile */
+      @media (max-width: 480px) {
+        .header-inner {
+          padding: 0 12px;
+          height: 52px;
+        }
+
+        .logo-icon {
+          width: 32px;
+          height: 32px;
+          font-size: 14px;
+        }
+
+        .nav-link {
+          padding: 8px;
+        }
+
+        .nav-link svg {
+          width: 18px;
+          height: 18px;
+        }
+
+        .theme-toggle {
+          width: 40px;
+          height: 40px;
+        }
+
+        .main {
+          padding: 8px;
+        }
+
+        .swagger-container {
+          border-radius: 6px;
+        }
+
+        .swagger-ui .information-container {
+          padding: 16px 12px;
+        }
+
+        .swagger-ui .info .title {
+          font-size: 18px;
+        }
+
+        .swagger-ui .info .title small {
+          font-size: 10px;
+          padding: 3px 6px;
+        }
+
+        .swagger-ui .scheme-container {
+          padding: 10px 12px;
+        }
+
+        .swagger-ui .opblock-tag-section {
+          margin: 0 4px;
+        }
+
+        .swagger-ui .opblock .opblock-summary {
+          padding: 8px 10px;
+        }
+
+        .swagger-ui .opblock .opblock-summary-method {
+          font-size: 10px;
+          min-width: 50px;
+          padding: 4px 8px;
+        }
+
+        .swagger-ui .opblock .opblock-summary-path {
+          font-size: 12px;
+        }
+
+        .swagger-ui section.models {
+          margin: 4px;
+        }
+
+        .footer-inner {
+          padding: 12px;
+          font-size: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="header-inner">
+        <a href="/" class="logo">
+          <div class="logo-icon">Y</div>
+          <div class="logo-text">
+            <span class="logo-title">YaSwag</span>
+            <span class="logo-subtitle">API Documentation</span>
+          </div>
+        </a>
+        <nav class="nav">
+          <a
+            href="https://github.com/fathurrohman26/yaswag#readme"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="nav-link"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            <span>Docs</span>
+          </a>
+          <a
+            href="https://github.com/fathurrohman26/yaswag/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="nav-link"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span>Issues</span>
+          </a>
+          <button
+            class="validation-badge loading"
+            id="validation-badge"
+            onclick="validateSpec()"
+            title="Click to see validation details"
+          >
+            <span class="badge-spinner"></span>
+            <span class="badge-text">Checking...</span>
+          </button>
+          <a
+            href="https://github.com/fathurrohman26/yaswag"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="nav-link primary"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+              />
+            </svg>
+            <span>GitHub</span>
+          </a>
+          <button
+            class="theme-toggle"
+            onclick="toggleTheme()"
+            aria-label="Toggle dark mode"
+          >
+            <svg
+              class="moon-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <svg
+              class="sun-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="swagger-container">
+        <div id="swagger-ui"></div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-text">
+          Powered by
+          <a
+            href="https://github.com/fathurrohman26/yaswag"
+            target="_blank"
+            rel="noopener noreferrer"
+            >YaSwag</a
+          >
+          &mdash; OpenAPI 3.x documentation for Go
+        </div>
+        <div class="footer-links">
+          <a
+            href="https://github.com/fathurrohman26/yaswag/blob/main/LICENSE"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >MIT License</a
+          >
+          <a
+            href="https://github.com/fathurrohman26/yaswag/releases"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+            >Releases</a
+          >
+        </div>
+      </div>
+    </footer>
+
+    <!-- Validation Modal -->
+    <div
+      class="modal-overlay"
+      id="validation-modal"
+      onclick="closeValidationModal(event)"
+    >
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">
+            <svg
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            Spec Validation
+          </h2>
+          <button class="modal-close" onclick="closeValidationModal()">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body" id="validation-content">
+          <div class="validation-loading">
+            <div class="validation-loading-spinner"></div>
+            <span>Validating specification...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script
+      src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"
+      charset="UTF-8"
+    ></script>
+    <script>
+      // Theme management
+      function getPreferredTheme() {
+        const stored = localStorage.getItem("yaswag-theme");
+        if (stored) return stored;
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+      }
+
+      function setTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("yaswag-theme", theme);
+      }
+
+      function toggleTheme() {
+        const current =
+          document.documentElement.getAttribute("data-theme") || "light";
+        setTheme(current === "dark" ? "light" : "dark");
+      }
+
+      // Initialize theme
+      setTheme(getPreferredTheme());
+
+      // Validation modal functions
+      let lastValidationResult = null;
+
+      function openValidationModal() {
+        document.getElementById("validation-modal").classList.add("active");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeValidationModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById("validation-modal").classList.remove("active");
+        document.body.style.overflow = "";
+      }
+
+      function updateValidationBadge(result) {
+        const badge = document.getElementById("validation-badge");
+        if (!badge) return;
+
+        badge.className = "validation-badge";
+
+        if (result === null) {
+          badge.classList.add("loading");
+          badge.innerHTML = `<span class="badge-spinner"></span><span class="badge-text">Checking...</span>`;
+          badge.title = "Validating specification...";
+        } else if (result.valid) {
+          badge.classList.add("valid");
+          badge.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span class="badge-text">Valid</span>
+          `;
+          badge.title = "Specification is valid. Click for details.";
+        } else {
+          const errorCount = result.errors ? result.errors.length : 0;
+          badge.classList.add("invalid");
+          badge.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            <span class="badge-text">${errorCount} Error${
+            errorCount !== 1 ? "s" : ""
+          }</span>
+          `;
+          badge.title = `Specification has ${errorCount} error${
+            errorCount !== 1 ? "s" : ""
+          }. Click for details.`;
+        }
+      }
+
+      async function validateSpec(showModal = true) {
+        if (showModal) {
+          openValidationModal();
+          const content = document.getElementById("validation-content");
+          content.innerHTML = `
+            <div class="validation-loading">
+              <div class="validation-loading-spinner"></div>
+              <span>Validating specification...</span>
+            </div>
+          `;
+        }
+
+        updateValidationBadge(null);
+
+        try {
+          const response = await fetch("/validate");
+          const result = await response.json();
+          lastValidationResult = result;
+          updateValidationBadge(result);
+          if (showModal) {
+            renderValidationResult(result);
+          }
+        } catch (error) {
+          const errorResult = {
+            valid: false,
+            errors: [{ message: error.message }],
+          };
+          lastValidationResult = errorResult;
+          updateValidationBadge(errorResult);
+          if (showModal) {
+            const content = document.getElementById("validation-content");
+            content.innerHTML = `
+              <div class="validation-status invalid">
+                <div class="validation-status-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </div>
+                <div class="validation-status-text">
+                  <div class="validation-status-title">Validation Failed</div>
+                  <div class="validation-status-version">Could not connect to validator</div>
+                </div>
+              </div>
+              <div class="validation-section">
+                <div class="validation-section-title">Error</div>
+                <div class="validation-item error">${escapeHtml(
+                  error.message
+                )}</div>
+              </div>
+            `;
+          }
+        }
+      }
+
+      // Auto-validate on page load (without showing modal)
+      async function autoValidate() {
+        await validateSpec(false);
+      }
+
+      function renderValidationResult(result) {
+        const content = document.getElementById("validation-content");
+        let html = "";
+
+        // Status banner
+        if (result.valid) {
+          html += `
+            <div class="validation-status valid">
+              <div class="validation-status-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <div class="validation-status-text">
+                <div class="validation-status-title">Specification is Valid</div>
+                ${
+                  result.version
+                    ? `<div class="validation-status-version">OpenAPI ${result.version}</div>`
+                    : ""
+                }
+              </div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="validation-status invalid">
+              <div class="validation-status-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </div>
+              <div class="validation-status-text">
+                <div class="validation-status-title">Specification has Issues</div>
+                ${
+                  result.version
+                    ? `<div class="validation-status-version">OpenAPI ${result.version}</div>`
+                    : ""
+                }
+              </div>
+            </div>
+          `;
+        }
+
+        // Errors section
+        if (result.errors && result.errors.length > 0) {
+          html += `
+            <div class="validation-section">
+              <div class="validation-section-title">
+                Errors
+                <span class="count">${result.errors.length}</span>
+              </div>
+              ${result.errors
+                .map(
+                  (err) => `
+                <div class="validation-item error">${escapeHtml(err.message)}${
+                    err.path
+                      ? ` <em style="color: var(--text-muted);">(${escapeHtml(
+                          err.path
+                        )})</em>`
+                      : ""
+                  }</div>
+              `
+                )
+                .join("")}
+            </div>
+          `;
+        }
+
+        // Warnings section
+        if (result.warnings && result.warnings.length > 0) {
+          html += `
+            <div class="validation-section">
+              <div class="validation-section-title">
+                Warnings
+                <span class="count">${result.warnings.length}</span>
+              </div>
+              ${result.warnings
+                .map(
+                  (warn) => `
+                <div class="validation-item warning">${escapeHtml(
+                  warn.message
+                )}${
+                    warn.path
+                      ? ` <em style="color: var(--text-muted);">(${escapeHtml(
+                          warn.path
+                        )})</em>`
+                      : ""
+                  }</div>
+              `
+                )
+                .join("")}
+            </div>
+          `;
+        }
+
+        // If valid with no warnings
+        if (
+          result.valid &&
+          (!result.warnings || result.warnings.length === 0)
+        ) {
+          html += `
+            <div style="text-align: center; color: var(--text-muted); padding: 10px 0;">
+              No issues found. Your OpenAPI specification is ready to use.
+            </div>
+          `;
+        }
+
+        content.innerHTML = html;
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Close modal on Escape key
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+          closeValidationModal();
+        }
+      });
+
+      // Initialize Swagger UI
+      window.onload = function () {
+        const ui = SwaggerUIBundle({
+          url: "{{.SpecURL}}",
+          dom_id: "#swagger-ui",
+          deepLinking: true,
+          presets: [SwaggerUIBundle.presets.apis],
+          plugins: [SwaggerUIBundle.plugins.DownloadUrl],
+          layout: "BaseLayout",
+          queryConfigEnabled: true,
+          validatorUrl: "/validate",
+          displayRequestDuration: true,
+          filter: true,
+          showExtensions: true,
+          showCommonExtensions: true,
+          defaultModelsExpandDepth: 1,
+          defaultModelExpandDepth: 1,
+          docExpansion: "list",
+          syntaxHighlight: {
+            activate: true,
+            theme: "agate",
+          },
+          onComplete: function () {
+            const spec = ui.specSelectors.specJson().toJS();
+            const title = spec?.info?.title;
+            if (title) {
+              document.title = title + " | YaSwag";
+            }
+            // Auto-validate using local endpoint
+            autoValidate();
+          },
+        });
+        window.ui = ui;
+      };
+    </script>
+  </body>
+</html>

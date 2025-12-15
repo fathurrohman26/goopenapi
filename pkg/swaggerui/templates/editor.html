@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YaSwag Editor</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/swagger-editor-dist@latest/swagger-editor.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      #swagger-editor {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="swagger-editor"></div>
+
+    <script src="https://unpkg.com/swagger-editor-dist@latest/swagger-editor-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-editor-dist@latest/swagger-editor-standalone-preset.js"></script>
+    <script>
+            // Default OpenAPI spec for new files
+            const defaultSpec = `openapi: 3.0.3
+      info:
+        title: My API
+        description: A sample API specification
+        version: 1.0.0
+        contact:
+          email: api@example.com
+        license:
+          name: MIT
+          url: https://opensource.org/licenses/MIT
+      servers:
+        - url: https://api.example.com/v1
+          description: Production server
+        - url: http://localhost:8080/v1
+          description: Development server
+      paths:
+        /users:
+          get:
+            summary: List all users
+            operationId: listUsers
+            tags:
+              - users
+            parameters:
+              - name: limit
+                in: query
+                description: Maximum number of users to return
+                schema:
+                  type: integer
+                  default: 20
+            responses:
+              '200':
+                description: A list of users
+                content:
+                  application/json:
+                    schema:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/User'
+          post:
+            summary: Create a user
+            operationId: createUser
+            tags:
+              - users
+            requestBody:
+              required: true
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/UserInput'
+            responses:
+              '201':
+                description: User created
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/User'
+        /users/{id}:
+          get:
+            summary: Get a user by ID
+            operationId: getUser
+            tags:
+              - users
+            parameters:
+              - name: id
+                in: path
+                required: true
+                description: User ID
+                schema:
+                  type: string
+            responses:
+              '200':
+                description: User found
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/User'
+              '404':
+                description: User not found
+      components:
+        schemas:
+          User:
+            type: object
+            properties:
+              id:
+                type: string
+                example: "123"
+              name:
+                type: string
+                example: "John Doe"
+              email:
+                type: string
+                format: email
+                example: "john@example.com"
+              createdAt:
+                type: string
+                format: date-time
+          UserInput:
+            type: object
+            required:
+              - name
+              - email
+            properties:
+              name:
+                type: string
+                example: "John Doe"
+              email:
+                type: string
+                format: email
+                example: "john@example.com"
+      tags:
+        - name: users
+          description: User management operations
+      `;
+
+            // Initialize Swagger Editor
+            function initEditor(spec) {
+              window.editor = SwaggerEditorBundle({
+                spec: spec,
+                dom_id: '#swagger-editor',
+                layout: 'StandaloneLayout',
+                presets: [SwaggerEditorStandalonePreset]
+              });
+            }
+
+            // Load spec based on mode
+            {{if .HasSpec}}
+            // Edit mode: fetch existing spec from server
+            fetch('/spec')
+              .then(response => response.text())
+              .then(spec => {
+                initEditor(spec);
+              })
+              .catch(err => {
+                console.error('Failed to load spec:', err);
+                // Fallback to default spec on error
+                initEditor(defaultSpec);
+              });
+            {{else}}
+            // Create mode: use default spec template
+            initEditor(defaultSpec);
+            {{end}}
+    </script>
+  </body>
+</html>
