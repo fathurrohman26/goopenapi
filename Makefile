@@ -9,11 +9,11 @@ GITCMD:=$(shell which git)
 GOLANGCI_LINT:=$(shell which golangci-lint)
 STATICCHECK:=$(shell which staticcheck)
 
-VERSION_INFO:=$(shell git describe --tags --always --dirty="-dev")
-COMMIT_HASH:=$(shell git rev-parse --short HEAD)
-BUILD_TIME:=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+VERSION ?= dev
+COMMIT  ?= $(shell git rev-parse --short HEAD)
+DATE    ?= $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-LDFLAGS:=-ldflags "-X main.version=$(VERSION_INFO) -X main.commit=$(COMMIT_HASH) -X main.date=$(BUILD_TIME)"
+LDFLAGS := -ldflags "-X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.date=$(DATE)"
 
 .PHONY: all build test fmt vet gocyclo lint clean release release-push release-snapshot release-check
 
