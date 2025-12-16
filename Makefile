@@ -67,7 +67,6 @@ release-test: lint test gocyclo fmt vet release-check release-snapshot
 
 release:
 	@echo "Starting release process..."
-	@goreleaser build --clean
 	@echo "Release build complete, pushing release..."
 	@if [ -z "$(GITHUB_TOKEN)" ]; then \
 		echo "GITHUB_TOKEN is not set! Please set it to proceed with the release."; \
