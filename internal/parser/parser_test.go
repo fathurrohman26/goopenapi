@@ -497,3 +497,88 @@ func verifyResourceIDPath(t *testing.T, doc *openapi.Document) {
 	assertNotNil(t, "DELETE on /resource/{id}", resourceIdPath.Delete)
 	assertNotNil(t, "PATCH on /resource/{id}", resourceIdPath.Patch)
 }
+
+// TestParser_ParseDirFromCurrentDirectory tests parsing from the current directory using "."
+// This reproduces the bug reported in issue #1
+func TestParser_ParseDirFromCurrentDirectory(t *testing.T) {
+	// Create a temporary directory structure similar to the bug report
+	tmpDir, err := os.MkdirTemp("", "yaswag-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	// Create docs subdirectory
+	docsDir := filepath.Join(tmpDir, "docs")
+	if err := os.MkdirAll(docsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create doc.go with entrypoint annotations
+	docFile := filepath.Join(docsDir, "doc.go")
+	docContent := `package docs
+
+// API Documentation
+//
+// !api 3.0.3
+// !info "Test API" v1.0.0 "A test API for issue #1"
+// !server https://api.example.com "Production"
+`
+	if err := os.WriteFile(docFile, []byte(docContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create handlers subdirectory
+	handlersDir := filepath.Join(tmpDir, "handlers")
+	if err := os.MkdirAll(handlersDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create handlers.go with API definitions
+	handlersFile := filepath.Join(handlersDir, "handlers.go")
+	handlersContent := `package handlers
+
+// GetUsers retrieves all users
+//
+// !GET /users -> getUsers "Get all users" #users
+// !ok 200 - "Success"
+func GetUsers() {}
+`
+	if err := os.WriteFile(handlersFile, []byte(handlersContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Save current working directory
+	originalWd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chdir(originalWd) }()
+
+	// Change to the temp directory (simulating "cd api")
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatal(err)
+	}
+
+	// Parse from current directory using "."
+	p := New()
+	if err := p.ParseDir("."); err != nil {
+		t.Fatalf("ParseDir(\".\") error = %v", err)
+	}
+
+	spec := p.GetSpec()
+
+	// Verify that annotations were found
+	if spec.Info == nil || spec.Info.Title == "" {
+		t.Fatal("Expected to find YaSwag annotations when parsing from current directory")
+	}
+
+	// Verify the content
+	assertEqual(t, "Info.Title", spec.Info.Title, "Test API")
+	assertEqual(t, "Info.Version", spec.Info.Version, "1.0.0")
+	assertLen(t, "Operations", len(spec.Operations), 1)
+	if len(spec.Operations) > 0 {
+		assertEqual(t, "Operation.Path", spec.Operations[0].Path, "/users")
+		assertEqual(t, "Operation.Method", spec.Operations[0].Method, "GET")
+	}
+}
