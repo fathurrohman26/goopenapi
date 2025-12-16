@@ -85,15 +85,21 @@ func New() *Parser {
 
 // ParseDir parses all Go files in the given directory recursively.
 func (p *Parser) ParseDir(dir string) error {
-	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	// Clean the path to normalize it
+	root := filepath.Clean(dir)
+
+	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if info.IsDir() {
 			name := info.Name()
-			// Skip vendor, hidden directories, and testdata
-			if name == "vendor" || name == "testdata" || strings.HasPrefix(name, ".") {
-				return filepath.SkipDir
+			// Don't skip the root directory itself
+			if path != root {
+				// Skip vendor, hidden directories, and testdata
+				if name == "vendor" || name == "testdata" || strings.HasPrefix(name, ".") {
+					return filepath.SkipDir
+				}
 			}
 			return nil
 		}
