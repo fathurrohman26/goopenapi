@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/fathurrohman26/yaswag/internal/parser"
+	"github.com/fathurrohman26/yaswag/pkg/audit"
 	"github.com/fathurrohman26/yaswag/pkg/mcp"
 	"github.com/fathurrohman26/yaswag/pkg/openapi"
 	"github.com/fathurrohman26/yaswag/pkg/output"
@@ -52,28 +53,40 @@ func (c *CLI) Run() error {
 
 	cmd := args[0]
 
-	switch cmd {
-	case "version", "-v", "--version":
-		fmt.Println(c.Version())
+	// Handle built-in commands
+	if c.handleBuiltinCommand(cmd) {
 		return nil
-	case "help", "-h", "--help":
-		fmt.Println(c.Help())
-		return nil
-	case "generate":
-		return c.runGenerate(args[1:])
-	case "validate":
-		return c.runValidate(args[1:])
-	case "format":
-		return c.runFormat(args[1:])
-	case "serve":
-		return c.runServe(args[1:])
-	case "editor":
-		return c.runEditor(args[1:])
-	case "mcp":
-		return c.runMCP(args[1:])
+	}
+
+	// Command dispatcher
+	commands := map[string]func([]string) error{
+		"generate": c.runGenerate,
+		"validate": c.runValidate,
+		"format":   c.runFormat,
+		"serve":    c.runServe,
+		"editor":   c.runEditor,
+		"mcp":      c.runMCP,
+		"audit":    c.runAudit,
+	}
+
+	if handler, ok := commands[cmd]; ok {
+		return handler(args[1:])
 	}
 
 	return fmt.Errorf("unknown command: %s", cmd)
+}
+
+// handleBuiltinCommand handles version and help commands, returns true if handled
+func (c *CLI) handleBuiltinCommand(cmd string) bool {
+	switch cmd {
+	case "version", "-v", "--version":
+		fmt.Println(c.Version())
+		return true
+	case "help", "-h", "--help":
+		fmt.Println(c.Help())
+		return true
+	}
+	return false
 }
 
 func (c *CLI) runGenerate(args []string) error {
@@ -440,6 +453,67 @@ func (c *CLI) printMCPValidationResult(result *validator.ValidationResult) {
 	}
 }
 
+func (c *CLI) runAudit(args []string) error {
+	fs := flag.NewFlagSet("audit", flag.ExitOnError)
+	input := fs.String("input", "", "Input file path, URL, or - for stdin")
+	format := fs.String("format", "text", "Output format: text or json (default: text)")
+	showHelp := fs.Bool("help", false, "Show help for audit command")
+
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+
+	if *showHelp {
+		fmt.Println(c.AuditHelp())
+		return nil
+	}
+
+	auditor := audit.New()
+	result, err := c.auditInput(auditor, *input)
+	if err != nil {
+		return err
+	}
+
+	return c.outputAuditResult(result, *format)
+}
+
+func (c *CLI) auditInput(auditor *audit.Auditor, input string) (*audit.AuditResult, error) {
+	if isURL(input) {
+		return auditor.AuditURL(input)
+	}
+
+	stdinRes, err := readFromStdinOrFile(input, true)
+	if err != nil {
+		return nil, err
+	}
+
+	if stdinRes.fromStdin {
+		return auditor.AuditData(stdinRes.data)
+	}
+	return auditor.AuditFile(input)
+}
+
+func (c *CLI) outputAuditResult(result *audit.AuditResult, format string) error {
+	switch strings.ToLower(format) {
+	case "json":
+		data, err := audit.FormatJSON(result)
+		if err != nil {
+			return fmt.Errorf("failed to format JSON: %w", err)
+		}
+		fmt.Println(string(data))
+	default:
+		fmt.Print(audit.FormatText(result))
+	}
+
+	// Exit with non-zero if there are error-level findings
+	for _, f := range result.Findings {
+		if f.Severity == audit.SeverityError {
+			os.Exit(1)
+		}
+	}
+	return nil
+}
+
 func (c *CLI) Version() string {
 	return fmt.Sprintf("yaswag version %s (commit: %s, built: %s)", c.info.version, c.info.commit, c.info.date)
 }
@@ -457,6 +531,7 @@ func (c *CLI) Help() string {
 	help.WriteString("  serve       Serve OpenAPI specification with Swagger UI\n")
 	help.WriteString("  editor      Launch Swagger Editor for creating/editing specifications\n")
 	help.WriteString("  mcp         Start MCP server for AI assistant integration\n")
+	help.WriteString("  audit       Perform security audit on OpenAPI specification\n")
 	help.WriteString("  version     Show version information\n")
 	help.WriteString("  help        Show this help message\n\n")
 	help.WriteString("Use 'yaswag [command] --help' for more information about a command.\n")
@@ -595,6 +670,34 @@ func (c *CLI) MCPHelp() string {
 	help.WriteString("  yaswag mcp ./openapi.json\n")
 	help.WriteString("  yaswag mcp ./api/swagger.yaml ./api/openapi.json\n")
 	help.WriteString("  yaswag mcp --skip-validation ./openapi.json\n")
+	return help.String()
+}
+
+func (c *CLI) AuditHelp() string {
+	help := strings.Builder{}
+	help.WriteString("Perform security audit on OpenAPI specification.\n\n")
+	help.WriteString("Analyzes your API specification for security issues including:\n")
+	help.WriteString("  - Unprotected write operations (POST/PUT/DELETE/PATCH)\n")
+	help.WriteString("  - API keys in query parameters\n")
+	help.WriteString("  - OAuth URLs not using HTTPS\n")
+	help.WriteString("  - Deprecated endpoints without security\n")
+	help.WriteString("  - OAuth scopes referenced but not defined\n\n")
+	help.WriteString("Usage:\n")
+	help.WriteString("  yaswag audit [options]\n")
+	help.WriteString("  <command> | yaswag audit\n\n")
+	help.WriteString("Options:\n")
+	help.WriteString("  --input <path>    Input file path, URL, or - for stdin\n")
+	help.WriteString("  --format <type>   Output format: text or json (default: text)\n")
+	help.WriteString("  --help            Show this help message\n\n")
+	help.WriteString("Exit Codes:\n")
+	help.WriteString("  0    No ERROR-level issues found\n")
+	help.WriteString("  1    ERROR-level issues found\n\n")
+	help.WriteString("Examples:\n")
+	help.WriteString("  yaswag audit --input ./swagger.yaml\n")
+	help.WriteString("  yaswag audit --input ./swagger.yaml --format json\n")
+	help.WriteString("  yaswag audit --input https://petstore3.swagger.io/api/v3/openapi.json\n")
+	help.WriteString("  yaswag generate --source ./api | yaswag audit\n")
+	help.WriteString("  cat swagger.yaml | yaswag audit\n")
 	return help.String()
 }
 

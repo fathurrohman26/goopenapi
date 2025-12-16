@@ -477,7 +477,10 @@ func (p *Parser) applyFieldInfo(jsonName string, fieldInfo ParsedField, schemaDa
 	if !ok {
 		return
 	}
-	propSchema.Description = fieldInfo.Description
+	// Only override description if annotation provides one
+	if fieldInfo.Description != "" {
+		propSchema.Description = fieldInfo.Description
+	}
 	if fieldInfo.Example != "" {
 		propSchema.Example = parseValue(fieldInfo.Example)
 	}
@@ -527,11 +530,19 @@ func (p *Parser) fieldToSchema(field *ast.Field) *openapi.Schema {
 }
 
 func (p *Parser) getFieldDescription(field *ast.Field) string {
+	// First try doc comment (above the field)
 	if field.Doc != nil {
-		return cleanDescription(field.Doc.Text())
+		desc := cleanDescription(field.Doc.Text())
+		if desc != "" {
+			return desc
+		}
 	}
+	// Then try inline comment (same line as field)
 	if field.Comment != nil {
-		return cleanDescription(field.Comment.Text())
+		desc := cleanDescription(field.Comment.Text())
+		if desc != "" {
+			return desc
+		}
 	}
 	return ""
 }

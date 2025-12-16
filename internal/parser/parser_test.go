@@ -3,6 +3,7 @@ package parser
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/fathurrohman26/yaswag/pkg/openapi"
@@ -596,3 +597,118 @@ func verifyCurrentDirSpec(t *testing.T, spec *SpecData) {
 		assertEqual(t, "Operation.Method", spec.Operations[0].Method, "GET")
 	}
 }
+
+// TestParser_SchemaInference tests automatic schema inference from Go types and json tags
+func TestParser_SchemaInference(t *testing.T) {
+	h := newTestHelper(t)
+	defer h.cleanup()
+
+	h.writeFile("models.go", schemaInferenceTestContent)
+
+	p := h.parse()
+	schemas := p.GetGlobalSchemas()
+
+	// Test Product schema (no !field annotations, relies on inference)
+	productSchema := schemas["Product"]
+	if productSchema == nil {
+		t.Fatal("Expected Product schema")
+	}
+
+	props := productSchema.Schema.Properties
+	assertLen(t, "Product properties", len(props), 3) // Internal excluded (json:"-")
+
+	// Verify ID field (required, no omitempty)
+	if props["id"] == nil {
+		t.Fatal("Expected id property")
+	}
+	if !slices.Contains(productSchema.Schema.Required, "id") {
+		t.Error("Expected id to be required (no omitempty)")
+	}
+
+	// Verify name field (optional, has omitempty)
+	if props["name"] == nil {
+		t.Fatal("Expected name property")
+	}
+	if slices.Contains(productSchema.Schema.Required, "name") {
+		t.Error("Expected name to be optional (has omitempty)")
+	}
+
+	// Verify description from inline comment
+	if props["name"].Description == "" {
+		t.Error("Expected name to have description from inline comment")
+	}
+
+	// Verify internal field is excluded (json:"-")
+	if props["internal"] != nil {
+		t.Error("Expected internal field to be excluded (json:\"-\")")
+	}
+
+	// Verify price field type inference
+	if props["price"] == nil {
+		t.Fatal("Expected price property")
+	}
+}
+
+// TestParser_SchemaInferenceMixed tests mixed annotations and inference
+func TestParser_SchemaInferenceMixed(t *testing.T) {
+	h := newTestHelper(t)
+	defer h.cleanup()
+
+	h.writeFile("models.go", schemaMixedTestContent)
+
+	p := h.parse()
+	schemas := p.GetGlobalSchemas()
+
+	orderSchema := schemas["Order"]
+	if orderSchema == nil {
+		t.Fatal("Expected Order schema")
+	}
+
+	props := orderSchema.Schema.Properties
+
+	// ID has !field annotation - should use annotation description
+	if props["id"] == nil {
+		t.Fatal("Expected id property")
+	}
+	assertEqual(t, "id description", props["id"].Description, "Unique order identifier")
+
+	// status has only inline comment - should use comment
+	if props["status"] == nil {
+		t.Fatal("Expected status property")
+	}
+	if props["status"].Description == "" {
+		t.Error("Expected status to have description from comment")
+	}
+}
+
+const schemaInferenceTestContent = `package main
+
+// !api 3.0.3
+// !info "Test API" v1.0.0 "Test"
+func main() {}
+
+// Product represents a product in the catalog
+// !model "A product"
+type Product struct {
+	ID       int64   ` + "`json:\"id\"`" + `
+	Name     string  ` + "`json:\"name,omitempty\"`" + ` // Product name
+	Price    float64 ` + "`json:\"price\"`" + `
+	Internal string  ` + "`json:\"-\"`" + `
+}
+`
+
+const schemaMixedTestContent = `package main
+
+// !api 3.0.3
+// !info "Test API" v1.0.0 "Test"
+func main() {}
+
+// Order represents a customer order
+// !model "An order"
+type Order struct {
+	// !field id:int64 "Unique order identifier" required
+	ID     int64  ` + "`json:\"id\"`" + `
+	// Order status
+	Status string ` + "`json:\"status,omitempty\"`" + `
+}
+`
