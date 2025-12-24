@@ -30,6 +30,11 @@ const (
 	AnnotationExternalDocs AnnotationType = "externalDocs" // !externalDocs https://... "Description"
 	AnnotationLink         AnnotationType = "link"         // !link "Label" https://...
 
+	// Webhook annotations (OpenAPI 3.1+)
+	AnnotationWebhook         AnnotationType = "webhook"          // !webhook name:method "Description"
+	AnnotationWebhookBody     AnnotationType = "webhook-body"     // !webhook-body SchemaRef "description" required
+	AnnotationWebhookResponse AnnotationType = "webhook-response" // !webhook-response 200 SchemaRef "description"
+
 	// Operation annotations
 	AnnotationRoute  AnnotationType = "route"  // !GET /path -> operationId "summary" #tag1 #tag2
 	AnnotationQuery  AnnotationType = "query"  // !query name:type "description" default=value required
@@ -67,6 +72,9 @@ type AnnotationParser struct {
 	scopePattern        *regexp.Regexp
 	externalDocsPattern *regexp.Regexp
 	linkPattern         *regexp.Regexp
+	webhookPattern      *regexp.Regexp
+	webhookBodyPattern  *regexp.Regexp
+	webhookRespPattern  *regexp.Regexp
 	routePattern        *regexp.Regexp
 	paramPattern        *regexp.Regexp
 	bodyPattern         *regexp.Regexp
@@ -117,6 +125,19 @@ func NewAnnotationParser() *AnnotationParser {
 		// !link "Label" URL
 		// Example: !link "The Pet Store repository" https://github.com/swagger-api/swagger-petstore
 		linkPattern: regexp.MustCompile(`^!link\s+"([^"]+)"\s+(\S+)`),
+
+		// !webhook name:method "Description"
+		// Example: !webhook newOrder:post "New order notification"
+		// Methods: get, post, put, delete, patch
+		webhookPattern: regexp.MustCompile(`^!webhook\s+(\w+):(get|post|put|delete|patch)\s*(?:"([^"]*)")?`),
+
+		// !webhook-body SchemaRef "description" required
+		// Example: !webhook-body OrderWebhook "Order data" required
+		webhookBodyPattern: regexp.MustCompile(`^!webhook-body\s+(\S+)(?:\s+"([^"]*)")?`),
+
+		// !webhook-response status SchemaRef "description"
+		// Example: !webhook-response 200 SuccessResponse "Webhook received"
+		webhookRespPattern: regexp.MustCompile(`^!webhook-response\s+(\d+)\s+(\S+)(?:\s+"([^"]*)")?`),
 
 		// !GET /path -> operationId "summary" #tag1 #tag2
 		// !POST /path -> operationId "summary" #tag
@@ -181,6 +202,9 @@ func (p *AnnotationParser) parseLine(line string) *Annotation {
 		return a
 	}
 	if a := p.parseSecurePattern(line); a != nil {
+		return a
+	}
+	if a := p.parseWebhookPattern(line); a != nil {
 		return a
 	}
 	if a := p.parseModelPattern(line); a != nil {
@@ -316,6 +340,48 @@ func (p *AnnotationParser) parseSecurePattern(line string) *Annotation {
 		Args:    map[string]string{"names": strings.Join(names, ",")},
 		Tags:    names,
 	}
+}
+
+func (p *AnnotationParser) parseWebhookPattern(line string) *Annotation {
+	// Try webhook pattern
+	if match := p.webhookPattern.FindStringSubmatch(line); match != nil {
+		return &Annotation{
+			Type:    AnnotationWebhook,
+			RawLine: line,
+			Args: map[string]string{
+				"name":        match[1],
+				"method":      match[2],
+				"description": match[3],
+			},
+		}
+	}
+
+	// Try webhook-body pattern
+	if match := p.webhookBodyPattern.FindStringSubmatch(line); match != nil {
+		return &Annotation{
+			Type:    AnnotationWebhookBody,
+			RawLine: line,
+			Args: map[string]string{
+				"schema":      match[1],
+				"description": match[2],
+			},
+		}
+	}
+
+	// Try webhook-response pattern
+	if match := p.webhookRespPattern.FindStringSubmatch(line); match != nil {
+		return &Annotation{
+			Type:    AnnotationWebhookResponse,
+			RawLine: line,
+			Args: map[string]string{
+				"status":      match[1],
+				"schema":      match[2],
+				"description": match[3],
+			},
+		}
+	}
+
+	return nil
 }
 
 func (p *AnnotationParser) parseModelPattern(line string) *Annotation {
@@ -631,6 +697,54 @@ func GetLink(a Annotation) ParsedLink {
 	return ParsedLink{
 		Label: a.Args["label"],
 		URL:   a.Args["url"],
+	}
+}
+
+// ParsedWebhook holds parsed !webhook data.
+type ParsedWebhook struct {
+	Name        string
+	Method      string
+	Description string
+}
+
+// GetWebhook extracts webhook from annotation.
+func GetWebhook(a Annotation) ParsedWebhook {
+	return ParsedWebhook{
+		Name:        a.Args["name"],
+		Method:      strings.ToUpper(a.Args["method"]),
+		Description: a.Args["description"],
+	}
+}
+
+// ParsedWebhookBody holds parsed !webhook-body data.
+type ParsedWebhookBody struct {
+	Schema      string
+	Description string
+	Required    bool
+}
+
+// GetWebhookBody extracts webhook body from annotation.
+func GetWebhookBody(a Annotation) ParsedWebhookBody {
+	return ParsedWebhookBody{
+		Schema:      a.Args["schema"],
+		Description: a.Args["description"],
+		Required:    strings.Contains(a.RawLine, "required"),
+	}
+}
+
+// ParsedWebhookResponse holds parsed !webhook-response data.
+type ParsedWebhookResponse struct {
+	Status      string
+	Schema      string
+	Description string
+}
+
+// GetWebhookResponse extracts webhook response from annotation.
+func GetWebhookResponse(a Annotation) ParsedWebhookResponse {
+	return ParsedWebhookResponse{
+		Status:      a.Args["status"],
+		Schema:      a.Args["schema"],
+		Description: a.Args["description"],
 	}
 }
 

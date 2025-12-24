@@ -33,6 +33,7 @@ type SpecData struct {
 	Servers      []openapi.Server
 	Tags         []openapi.Tag
 	Operations   []OperationData
+	Webhooks     []WebhookData // Webhook definitions (OpenAPI 3.1+)
 	Schemas      map[string]*SchemaData
 	Securities   map[string]*openapi.SecurityScheme
 	ExternalDocs *openapi.ExternalDocumentation
@@ -58,6 +59,16 @@ type OperationData struct {
 	RequestBody *openapi.RequestBody
 	Responses   openapi.Responses
 	Security    []openapi.SecurityRequirement
+}
+
+// WebhookData holds parsed webhook data.
+type WebhookData struct {
+	Name        string
+	Method      string
+	Summary     string
+	Description string
+	RequestBody *openapi.RequestBody
+	Responses   openapi.Responses
 }
 
 // SchemaData holds parsed schema data with examples.
@@ -146,6 +157,23 @@ func (p *Parser) parseCommentGroup(cg *ast.CommentGroup) {
 	text := cg.Text()
 
 	annotations := p.annotationParser.Parse(text)
+
+	// Check if this comment group contains webhook annotations
+	hasWebhook := false
+	for _, a := range annotations {
+		if a.Type == AnnotationWebhook {
+			hasWebhook = true
+			break
+		}
+	}
+
+	// If has webhook, parse as webhook group
+	if hasWebhook {
+		p.parseWebhookAnnotations(annotations)
+		return
+	}
+
+	// Otherwise, handle normally
 	for _, a := range annotations {
 		p.handleAnnotation(a)
 	}
@@ -291,6 +319,58 @@ func (p *Parser) handleExternalDocs(a Annotation) {
 func (p *Parser) handleLink(a Annotation) {
 	link := GetLink(a)
 	p.spec.Links = append(p.spec.Links, LinkData(link))
+}
+
+func (p *Parser) parseWebhookAnnotations(annotations []Annotation) {
+	var webhook *WebhookData
+
+	for _, a := range annotations {
+		switch a.Type {
+		case AnnotationWebhook:
+			// If we have a previous webhook, save it
+			if webhook != nil {
+				p.spec.Webhooks = append(p.spec.Webhooks, *webhook)
+			}
+
+			// Start new webhook
+			wh := GetWebhook(a)
+			webhook = &WebhookData{
+				Name:      wh.Name,
+				Method:    wh.Method,
+				Summary:   wh.Description,
+				Responses: make(openapi.Responses),
+			}
+
+		case AnnotationWebhookBody:
+			if webhook != nil {
+				body := GetWebhookBody(a)
+				webhook.RequestBody = &openapi.RequestBody{
+					Description: body.Description,
+					Required:    body.Required,
+					Content: map[string]openapi.MediaType{
+						"application/json": {Schema: p.parseSchemaRef(body.Schema)},
+					},
+				}
+			}
+
+		case AnnotationWebhookResponse:
+			if webhook != nil {
+				resp := GetWebhookResponse(a)
+				response := &openapi.Response{Description: resp.Description}
+				if resp.Schema != "" && resp.Schema != "-" && resp.Schema != "nil" && resp.Schema != "none" {
+					response.Content = map[string]openapi.MediaType{
+						"application/json": {Schema: p.parseSchemaRef(resp.Schema)},
+					}
+				}
+				webhook.Responses[resp.Status] = response
+			}
+		}
+	}
+
+	// Don't forget to save the last webhook
+	if webhook != nil {
+		p.spec.Webhooks = append(p.spec.Webhooks, *webhook)
+	}
 }
 
 func (p *Parser) parseFuncDecl(fn *ast.FuncDecl) {
@@ -702,10 +782,12 @@ func (p *Parser) generateDocument(spec *SpecData) *openapi.Document {
 		Servers:      spec.Servers,
 		Tags:         spec.Tags,
 		Paths:        make(openapi.Paths),
+		Webhooks:     make(map[string]*openapi.PathItem),
 		ExternalDocs: spec.ExternalDocs,
 	}
 
 	p.addPaths(doc, spec.Operations)
+	p.addWebhooks(doc, spec.Webhooks)
 	p.addComponents(doc, spec)
 	return doc
 }
@@ -729,6 +811,39 @@ func (p *Parser) addPaths(doc *openapi.Document, operations []OperationData) {
 			doc.Paths[op.Path] = pathItem
 		}
 		setPathOperation(pathItem, op)
+	}
+}
+
+func (p *Parser) addWebhooks(doc *openapi.Document, webhooks []WebhookData) {
+	if len(webhooks) == 0 {
+		return
+	}
+
+	for _, wh := range webhooks {
+		pathItem := &openapi.PathItem{}
+
+		operation := &openapi.Operation{
+			Summary:     wh.Summary,
+			Description: wh.Description,
+			RequestBody: wh.RequestBody,
+			Responses:   wh.Responses,
+		}
+
+		// Set operation based on HTTP method
+		switch wh.Method {
+		case "GET":
+			pathItem.Get = operation
+		case "POST":
+			pathItem.Post = operation
+		case "PUT":
+			pathItem.Put = operation
+		case "DELETE":
+			pathItem.Delete = operation
+		case "PATCH":
+			pathItem.Patch = operation
+		}
+
+		doc.Webhooks[wh.Name] = pathItem
 	}
 }
 
